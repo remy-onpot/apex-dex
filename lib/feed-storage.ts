@@ -51,3 +51,48 @@ export function isOwnedFeedImageUrl(url: string, userId: string) {
     return false
   }
 }
+
+function ownedFeedImagePath(url: string, userId: string) {
+  if (!isOwnedFeedImageUrl(url, userId) || !storageBaseUrl) return null
+
+  const publicPrefix = `/storage/v1/object/public/${encodeURIComponent(storageBucket)}/`
+  const pathname = new URL(url).pathname
+  if (!pathname.startsWith(publicPrefix)) return null
+
+  return pathname
+    .slice(publicPrefix.length)
+    .split("/")
+    .map((segment) => decodeURIComponent(segment))
+    .join("/")
+}
+
+export async function deleteFeedImages(urls: string[], userId: string) {
+  if (urls.length === 0) return
+
+  const config = requireStorageConfig()
+  const paths = Array.from(
+    new Set(
+      urls
+        .map((url) => ownedFeedImagePath(url, userId))
+        .filter((path): path is string => Boolean(path))
+    )
+  )
+  if (paths.length === 0) return
+
+  const response = await fetch(
+    `${config.storageBaseUrl}/storage/v1/object/${encodeURIComponent(config.storageBucket)}`,
+    {
+      method: "DELETE",
+      headers: {
+        apikey: config.serviceRoleKey,
+        Authorization: `Bearer ${config.serviceRoleKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ prefixes: paths }),
+    }
+  )
+
+  if (!response.ok) {
+    throw new Error("Unable to delete attached images from Supabase Storage")
+  }
+}

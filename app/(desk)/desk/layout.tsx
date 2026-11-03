@@ -2,6 +2,8 @@ import { notFound } from "next/navigation"
 
 import { dashboardConfig } from "@/config/dashboard"
 import { getCurrentUser } from "@/lib/session"
+import { db } from "@/lib/db"
+import { hasActiveSubscription, logInactiveSubscriptionAdvisory } from "@/lib/subscription"
 import { MainNav } from "@/components/main-nav"
 import { DashboardNav } from "@/components/nav"
 import { SiteFooter } from "@/components/site-footer"
@@ -18,6 +20,28 @@ export default async function DashboardLayout({
 
   if (!user) {
     return notFound()
+  }
+
+  const dbUser = await db.user.findUnique({
+    where: { id: user.id },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      isPremium: true,
+      subscriptionEndDate: true,
+    },
+  })
+
+  if (!dbUser) return notFound()
+
+  if (dbUser.role === "STUDENT") {
+    const isActive = hasActiveSubscription(dbUser)
+    if (!isActive) {
+      logInactiveSubscriptionAdvisory(dbUser.id, dbUser)
+      // TODO(Phase 6): enable after Paystack sandbox cases pass.
+      // redirect("/checkout")
+    }
   }
 
   return (

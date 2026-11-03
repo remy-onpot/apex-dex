@@ -1,18 +1,14 @@
-import { getServerSession } from "next-auth/next"
 import { NextResponse } from "next/server"
 
-import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { requireMentor } from "@/lib/mentor-auth"
 
 export async function PATCH(
   request: Request,
   { params }: { params: { reviewId: string } }
 ) {
-  const session = await getServerSession(authOptions)
-
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
+  const auth = await requireMentor()
+  if ("response" in auth) return auth.response
 
   let body: unknown
   try {
@@ -25,19 +21,33 @@ export async function PATCH(
     !body ||
     typeof body !== "object" ||
     !("feedback" in body) ||
-    typeof body.feedback !== "string"
+    typeof body.feedback !== "string" ||
+    !body.feedback.trim() ||
+    body.feedback.trim().length > 10000
   ) {
     return NextResponse.json(
       { error: "Feedback must be a string" },
       { status: 400 }
     )
   }
+  const feedback = (body as { feedback: string }).feedback.trim()
 
   try {
-    const submission = await db.chartSubmission.update({
-      where: { id: params.reviewId },
-      data: { feedback: body.feedback, status: "REVIEWED" },
+    const submission = await db.$transaction(async (transaction) => {
+      const result = await transaction.chartSubmission.updateMany({
+        where: { id: params.reviewId, status: "PENDING" },
+        data: { feedback, status: "GRADED" },
+      })
+      if (result.count === 0) return null
+
+      return transaction.chartSubmission.findUnique({
+        where: { id: params.reviewId },
+        include: { student: { select: { id: true, name: true } } },
+      })
     })
+    if (!submission) {
+      return NextResponse.json({ error: "Pending chart review not found" }, { status: 404 })
+    }
 
     return NextResponse.json(submission)
   } catch {

@@ -45,13 +45,13 @@ export function LandingBento() {
               Stop gambling. Copy the alpha.
             </h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-muted-foreground md:text-lg">
-              Quit paying $350/mo for noisy Snapchat groups. Get live institutional
+              A focused mentor-led trading desk for structured setups, deliberate execution, and chart review.
               setups, strict risk management, and brutal chart reviews.
             </p>
           </div>
           <Link href="/login" className="mt-10 w-fit">
             <Button size="lg" className="h-auto min-h-12 rounded-sm px-6 py-4 font-black uppercase tracking-wide">
-              Enter the inner circle - GH cedi 50/week
+              Join the desk - GH₵100 / week
             </Button>
           </Link>
         </motion.article>
@@ -90,7 +90,7 @@ export function LandingBento() {
           <div className="mt-6 border border-border/60 bg-black/40 p-3" aria-label="Illustrative XAUUSD candlestick chart">
             <div className="mb-3 flex items-center justify-between border-b border-border/60 pb-3 font-mono text-[10px] font-bold uppercase tracking-widest">
               <span className="text-foreground">XAU / USD</span>
-              <span className="text-muted-foreground">4H · Structure</span>
+              <span className="text-muted-foreground">4H Â· Structure</span>
             </div>
             <svg viewBox="0 0 372 210" role="img" aria-label="Illustrative candlestick chart with planned entry and invalidation levels" className="block w-full">
               {[34, 74, 114, 154, 194].map((y) => <line key={`h${y}`} x1="4" x2="368" y1={y} y2={y} stroke="currentColor" className="text-slate-800" />)}
@@ -108,7 +108,7 @@ export function LandingBento() {
               <circle cx="349" cy="27" r="3" fill="#c7ff3d" />
             </svg>
             <div className="mt-2 flex justify-between border-t border-border/50 pt-2 font-mono text-[9px] uppercase tracking-wider text-muted-foreground">
-              <span>XAUUSD / Study 014</span><span>Illustrative only · not a live signal</span>
+              <span>XAUUSD / Study 014</span><span>Illustrative only Â· not a live signal</span>
             </div>
           </div>
         </motion.article>
@@ -163,7 +163,7 @@ export function LandingBento() {
           <span><b className="mr-2 text-lime-400">+</b>Live market context</span>
           <span><b className="mr-2 text-lime-400">+</b>Defined risk before entry</span>
           <span><b className="mr-2 text-lime-400">+</b>Weekly review cadence</span>
-          <span><b className="mr-2 text-lime-400">+</b>Member discussion</span>
+          <span><b className="mr-2 text-lime-400">+</b>One mentor. One broadcast.</span>
         </div>
       </motion.section>
 
@@ -182,7 +182,7 @@ export function LandingBento() {
             <div className="bg-background p-7 md:p-10">
               <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-red-500/80">Retail / Same old cycle</p>
               <ul className="mt-8 space-y-5 text-lg font-bold uppercase tracking-tight text-muted-foreground">
-                {["Revenge trading", "Telegram noise", "Changing strategies weekly", "Blown accounts"].map((item) => <li key={item} className="flex gap-4"><span className="text-red-500/80">â€”</span>{item}</li>)}
+                {["Revenge trading", "Telegram noise", "Changing strategies weekly", "Blown accounts"].map((item) => <li key={item} className="flex gap-4"><span className="text-red-500/80">−</span>{item}</li>)}
               </ul>
             </div>
             <div className="bg-background p-7 md:p-10">
@@ -207,11 +207,11 @@ export function LandingBento() {
         <div>
           <p className="mb-3 font-mono text-xs font-bold uppercase tracking-[0.22em] text-lime-400">Membership / Weekly access</p>
           <h2 className="max-w-2xl text-4xl font-black uppercase tracking-tighter md:text-6xl">One week. One process. No excuses.</h2>
-          <p className="mt-5 max-w-xl leading-7 text-muted-foreground">Get the feed, the review room, the academy, and the member discussion for GHâ‚µ 50 per week. Come in, do the work, decide if the desk earns another week.</p>
+          <p className="mt-5 max-w-xl leading-7 text-muted-foreground">Get mentor broadcasts, structured setups, chart reviews, and the Academy for one weekly membership. Come in, do the work, decide if the desk earns another week.</p>
         </div>
         <div className="min-w-64 border border-border/60 bg-background/70 p-6 backdrop-blur">
           <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Inner Circle / Weekly</p>
-          <p className="mt-4 text-4xl font-black tracking-tighter">GHâ‚µ 50<span className="text-sm font-bold tracking-normal text-muted-foreground"> / week</span></p>
+          <p className="mt-4 text-4xl font-black tracking-tighter">GH₵ 100<span className="text-sm font-bold tracking-normal text-muted-foreground"> / week</span></p>
           <p className="mt-3 text-xs leading-5 text-muted-foreground">Payment and renewal details are shown at checkout.</p>
           <Link href="/login" className="mt-6 block">
             <Button size="lg" className="w-full rounded-sm font-black uppercase">Get access</Button>
@@ -231,9 +231,9 @@ export function LandingBento() {
           <p className="mb-4 font-mono text-xs font-black uppercase tracking-[0.24em]">Apex Desk / Your move</p>
           <h2 id="final-cta-heading" className="text-6xl font-black uppercase leading-[0.88] tracking-tighter md:text-8xl">Execute or exit.</h2>
           <div className="mt-9 flex flex-col items-start justify-between gap-7 border-t border-zinc-950/20 pt-7 md:flex-row md:items-center">
-            <p className="max-w-xl text-lg font-medium leading-7">The Inner Circle is GHâ‚µ 50/week. If you can&apos;t manage that risk, you shouldn&apos;t be trading.</p>
+            <p className="max-w-xl text-lg font-medium leading-7">The Inner Circle is GH₵ 100/week. If you can&apos;t manage that risk, you shouldn&apos;t be trading.</p>
             <Link href="/login">
-              <Button size="lg" className="h-14 rounded-sm bg-zinc-950 px-8 text-base font-black uppercase text-lime-300 hover:bg-zinc-800">Enter the Inner Circle <span aria-hidden="true" className="ml-3">â†—</span></Button>
+              <Button size="lg" className="h-14 rounded-sm bg-zinc-950 px-8 text-base font-black uppercase text-lime-300 hover:bg-zinc-800">Enter the Inner Circle </Button>
             </Link>
           </div>
         </div>

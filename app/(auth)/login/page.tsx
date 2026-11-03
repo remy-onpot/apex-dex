@@ -5,7 +5,7 @@ import { UserAuthForm } from "@/components/user-auth-form"
 
 export const metadata: Metadata = {
   title: "Login",
-  description: "Authenticate to access institutional setups and community reviews.",
+  description: "Authenticate to access mentor setups and chart reviews.",
 }
 
 export default function LoginPage() {
@@ -23,7 +23,7 @@ export default function LoginPage() {
               Enter the Inner Circle
             </h1>
             <p className="text-sm leading-6 text-muted-foreground">
-              Authenticate to access institutional setups and community reviews.
+              Authenticate to access mentor setups and chart reviews.
             </p>
           </div>
         </div>

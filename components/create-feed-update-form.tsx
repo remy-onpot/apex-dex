@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -72,6 +73,7 @@ export function CreateFeedUpdateForm() {
           </p>
         </div>
         <Button type="submit" disabled={isPublishing || !text.trim()}>
+          {isPublishing && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
           {isPublishing ? "Publishing…" : "Post update"}
         </Button>
       </div>

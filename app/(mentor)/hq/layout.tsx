@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next"
 import { redirect } from "next/navigation"
 
 import { authOptions } from "@/lib/auth"
+import { db } from "@/lib/db"
 
 const mentorLinks = [
   { href: "/hq", label: "Dashboard" },
@@ -10,6 +11,7 @@ const mentorLinks = [
   { href: "/hq/setups", label: "Publish Setups" },
   { href: "/hq/academy", label: "Publish Lessons" },
   { href: "/hq/reviews", label: "Pending Chart Reviews" },
+  { href: "/hq/payments", label: "Payment Ledger" },
 ]
 
 interface MentorLayoutProps {
@@ -18,9 +20,15 @@ interface MentorLayoutProps {
 
 export default async function MentorLayout({ children }: MentorLayoutProps) {
   const session = await getServerSession(authOptions)
+  const dbUser = session?.user?.id
+    ? await db.user.findUnique({
+        where: { id: session.user.id },
+        select: { role: true },
+      })
+    : null
 
-  if (session?.user?.role !== "MENTOR") {
-    redirect("/desk/setups")
+  if (dbUser?.role !== "MENTOR") {
+    redirect("/desk/feed")
   }
 
   return (

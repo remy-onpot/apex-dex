@@ -26,19 +26,21 @@ import { toast } from "@/components/ui/use-toast"
 import { Icons } from "@/components/icons"
 
 async function deletePost(postId: string) {
-  const response = await fetch(`/api/posts/${postId}`, {
-    method: "DELETE",
-  })
-
-  if (!response?.ok) {
+  try {
+    const response = await fetch(`/api/posts/${postId}`, {
+      method: "DELETE",
+    })
+    if (!response.ok) throw new Error("Delete request failed")
+    toast({ description: "Your post and attached images were deleted." })
+    return true
+  } catch {
     toast({
       title: "Something went wrong.",
       description: "Your post was not deleted. Please try again.",
       variant: "destructive",
     })
+    return false
   }
-
-  return true
 }
 
 interface PostOperationsProps {
@@ -90,9 +92,9 @@ export function PostOperations({ post }: PostOperationsProps) {
                 setIsDeleteLoading(true)
 
                 const deleted = await deletePost(post.id)
+                setIsDeleteLoading(false)
 
                 if (deleted) {
-                  setIsDeleteLoading(false)
                   setShowDeleteAlert(false)
                   router.refresh()
                 }

@@ -1,28 +1,18 @@
-import { getServerSession } from "next-auth/next"
 import { NextResponse } from "next/server"
-import { z, ZodError } from "zod"
+import { ZodError } from "zod"
 
-import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { isOwnedFeedImageUrl } from "@/lib/feed-storage"
-
-const announcementSchema = z.object({
-  text: z.string().trim().min(1).max(5000),
-  imageUrls: z.array(z.string().url()).max(6).default([]),
-})
+import { requireMentor } from "@/lib/mentor-auth"
+import { announcementSchema } from "@/lib/validations/announcement"
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-  if (session.user.role !== "MENTOR") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const auth = await requireMentor()
+  if ("response" in auth) return auth.response
 
   try {
     const body = announcementSchema.parse(await request.json())
-    if (body.imageUrls.some((url) => !isOwnedFeedImageUrl(url, session.user.id))) {
+    if (body.imageUrls?.some((url) => !isOwnedFeedImageUrl(url, auth.userId))) {
       return NextResponse.json({ error: "Invalid image attachment" }, { status: 403 })
     }
 
@@ -30,10 +20,10 @@ export async function POST(request: Request) {
       data: {
         title: body.text.slice(0, 120),
         content: body.text,
-        imageUrls: body.imageUrls,
+        imageUrls: body.imageUrls ?? [],
         published: true,
         type: "ANNOUNCEMENT",
-        authorId: session.user.id,
+        authorId: auth.userId,
       },
       select: { id: true },
     })

@@ -1,25 +1,18 @@
-import { getServerSession } from "next-auth/next"
 import { NextResponse } from "next/server"
 import { ZodError } from "zod"
 
-import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
 import { isOwnedFeedImageUrl } from "@/lib/feed-storage"
+import { requireMentor } from "@/lib/mentor-auth"
 import { setupSchema } from "@/lib/validations/setup"
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions)
-
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-  if (session.user.role !== "MENTOR") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const auth = await requireMentor()
+  if ("response" in auth) return auth.response
 
   try {
     const body = setupSchema.parse(await request.json())
-    if (body.imageUrls?.some((url) => !isOwnedFeedImageUrl(url, session.user.id))) {
+    if (body.imageUrls?.some((url) => !isOwnedFeedImageUrl(url, auth.userId))) {
       return NextResponse.json({ error: "Invalid image attachment" }, { status: 403 })
     }
     const post = await db.post.create({
@@ -28,7 +21,7 @@ export async function POST(request: Request) {
         content: body.content,
         imageUrls: body.imageUrls ?? [],
         published: true,
-        authorId: session.user.id,
+        authorId: auth.userId,
         type: "TRADE_SETUP",
         tradeMetadata: {
           create: {

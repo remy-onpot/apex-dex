@@ -1,69 +1,42 @@
 import Link from "next/link"
 
-import { cn } from "@/lib/utils"
-import { buttonVariants } from "@/components/ui/button"
-import { Icons } from "@/components/icons"
-
 export const metadata = {
-  title: "Pricing",
+  title: "Membership | Apex Desk",
+  description: "A focused, mentor-led trading desk. GH₵100 for seven days.",
 }
+
+const included = [
+  "Structured mentor trade setups with entry, stop, and targets",
+  "The Academy: playbooks, risk models, and execution lessons",
+  "The Crucible: submit chart work and learn from mentor reviews",
+  "A quiet, broadcast-first desk built for deliberate execution",
+]
 
 export default function PricingPage() {
   return (
-    <section className="container flex flex-col  gap-6 py-8 md:max-w-[64rem] md:py-12 lg:py-24">
-      <div className="mx-auto flex w-full flex-col gap-4 md:max-w-[58rem]">
-        <h2 className="font-heading text-3xl leading-[1.1] sm:text-3xl md:text-6xl">
-          Simple, transparent pricing
-        </h2>
-        <p className="max-w-[85%] leading-normal text-muted-foreground sm:text-lg sm:leading-7">
-          Unlock all features including unlimited posts for your blog.
+    <main className="mx-auto grid min-h-[75vh] max-w-6xl items-center gap-12 px-6 py-16 md:grid-cols-[1.2fr_0.8fr] md:py-24">
+      <section>
+        <p className="font-mono text-xs font-bold uppercase tracking-[0.25em] text-lime-400">Apex Desk · Ghana</p>
+        <h1 className="mt-5 max-w-3xl text-5xl font-black uppercase tracking-tight md:text-7xl">A cleaner process. A sharper desk.</h1>
+        <p className="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
+          One mentor-led feed for setups, study, and chart review. No public chat rooms and no promises of profit. You bring the discipline; the desk gives you a structured place to work.
         </p>
-      </div>
-      <div className="grid w-full items-start gap-10 rounded-lg border p-10 md:grid-cols-[1fr_200px]">
-        <div className="grid gap-6">
-          <h3 className="text-xl font-bold sm:text-2xl">
-            What&apos;s included in the PRO plan
-          </h3>
-          <ul className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-2">
-            <li className="flex items-center">
-              <Icons.check className="mr-2 h-4 w-4" /> Unlimited Posts
-            </li>
-            <li className="flex items-center">
-              <Icons.check className="mr-2 h-4 w-4" /> Unlimited Users
-            </li>
-
-            <li className="flex items-center">
-              <Icons.check className="mr-2 h-4 w-4" /> Custom domain
-            </li>
-            <li className="flex items-center">
-              <Icons.check className="mr-2 h-4 w-4" /> Dashboard Analytics
-            </li>
-            <li className="flex items-center">
-              <Icons.check className="mr-2 h-4 w-4" /> Access to Discord
-            </li>
-            <li className="flex items-center">
-              <Icons.check className="mr-2 h-4 w-4" /> Premium Support
-            </li>
-          </ul>
-        </div>
-        <div className="flex flex-col gap-4 text-center">
-          <div>
-            <h4 className="text-7xl font-bold">$19</h4>
-            <p className="text-sm font-medium text-muted-foreground">
-              Billed Monthly
-            </p>
-          </div>
-          <Link href="/login" className={cn(buttonVariants({ size: "lg" }))}>
-            Get Started
-          </Link>
-        </div>
-      </div>
-      <div className="mx-auto flex w-full max-w-[58rem] flex-col gap-4">
-        <p className="max-w-[85%] leading-normal text-muted-foreground sm:leading-7">
-          Taxonomy is a demo app.{" "}
-          <strong>You can test the upgrade and won&apos;t be charged.</strong>
+        <p className="mt-5 max-w-2xl text-sm leading-6 text-muted-foreground">
+          Trading forex involves substantial risk and losses can exceed expectations. Signals and education are not financial advice or a guarantee of results.
         </p>
-      </div>
-    </section>
+      </section>
+      <section className="border border-lime-400/30 bg-zinc-950 p-7 shadow-2xl shadow-lime-950/20 md:p-9">
+        <p className="font-mono text-xs uppercase tracking-[0.2em] text-lime-400">One-week access</p>
+        <p className="mt-4 text-5xl font-black">GH₵100</p>
+        <p className="mt-1 text-sm text-muted-foreground">7 days · one-time payment · no automatic renewal</p>
+        <ul className="mt-8 grid gap-4 text-sm leading-6">
+          {included.map((item) => <li key={item} className="flex gap-3"><span className="text-lime-400">+</span><span>{item}</span></li>)}
+        </ul>
+        <Link href="/checkout" className="mt-9 flex min-h-12 items-center justify-center bg-lime-400 px-5 text-sm font-black uppercase tracking-wide text-zinc-950 transition-colors hover:bg-lime-300">
+          See access options
+        </Link>
+        <p className="mt-4 text-center text-xs leading-5 text-muted-foreground">Access starts after the payment provider confirms your payment. Renew each week when you choose.</p>
+      </section>
+    </main>
   )
 }

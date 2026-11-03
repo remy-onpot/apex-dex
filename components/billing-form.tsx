@@ -12,6 +12,13 @@ type BillingFormProps = {
 }
 
 export function BillingForm({ subscriptionPlan }: BillingFormProps) {
+  const statusLabel = {
+    active: "Active",
+    expired: "Expired",
+    never_subscribed: "Not subscribed",
+    inactive: "Needs review",
+  }[subscriptionPlan.status]
+
   return (
     <Card>
       <CardHeader>
@@ -20,7 +27,7 @@ export function BillingForm({ subscriptionPlan }: BillingFormProps) {
       </CardHeader>
       <CardContent className="space-y-2">
         <p>
-          Premium status: <strong>{subscriptionPlan.isPremium ? "Premium" : "Free"}</strong>
+          Access status: <strong>{statusLabel}</strong>
         </p>
         {subscriptionPlan.subscriptionEndDate && (
           <p>

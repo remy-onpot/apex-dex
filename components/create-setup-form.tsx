@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import type { z } from "zod"
+import { Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -122,6 +123,7 @@ export function CreateSetupForm() {
         </div>
       </div>
       <Button type="submit" disabled={isSaving}>
+        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
         {isSaving ? "Publishing…" : "Publish setup"}
       </Button>
     </form>

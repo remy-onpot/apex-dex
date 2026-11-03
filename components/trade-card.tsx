@@ -2,7 +2,6 @@ import { formatDistanceToNow } from "date-fns"
 import type { Prisma } from "@prisma/client"
 
 import { Badge } from "@/components/ui/badge"
-import { PostComments } from "@/components/post-comments"
 import { MarkReadButton } from "@/components/mark-read-button"
 import {
   Card,
@@ -12,7 +11,7 @@ import {
 } from "@/components/ui/card"
 
 export type TradePost = Prisma.PostGetPayload<{
-  include: { tradeMetadata: true; readReceipts: { select: { id: true } }; comments: { include: { author: { select: { name: true } } } } }
+  include: { tradeMetadata: true; readReceipts: { select: { id: true } } }
 }>
 
 function getPostText(content: TradePost["content"]) {
@@ -98,7 +97,6 @@ export function TradeCard({ post, isUnread }: { post: TradePost; isUnread: boole
           </div>
         )}
         {isUnread && <MarkReadButton postId={post.id} />}
-        <PostComments postId={post.id} initialComments={post.comments} />
         <p className="text-xs text-muted-foreground">
           {formatDistanceToNow(post.createdAt, { addSuffix: true })}
         </p>

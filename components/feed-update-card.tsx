@@ -1,14 +1,12 @@
 import { formatDistanceToNow } from "date-fns"
 import type { Prisma } from "@prisma/client"
 
-import { PostComments } from "@/components/post-comments"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 
 type FeedUpdate = Prisma.PostGetPayload<{
   include: {
     author: { select: { name: true } }
-    comments: { include: { author: { select: { name: true } } } }
   }
 }>
 
@@ -49,7 +47,6 @@ export function FeedUpdateCard({ post }: { post: FeedUpdate }) {
             ))}
           </div>
         )}
-        <PostComments postId={post.id} initialComments={post.comments} />
       </CardContent>
     </Card>
   )

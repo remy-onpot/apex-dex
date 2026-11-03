@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -33,7 +34,7 @@ export function GradeChartForm({ reviewId }: { reviewId: string }) {
         return
       }
 
-      toast({ description: "Feedback submitted." })
+      toast({ description: "Chart graded and published to the Crucible." })
       router.refresh()
     } catch {
       toast({
@@ -60,7 +61,8 @@ export function GradeChartForm({ reviewId }: { reviewId: string }) {
         />
       </div>
       <Button type="submit" disabled={isSubmitting || !feedback.trim()}>
-        {isSubmitting ? "Submitting…" : "Submit Feedback"}
+        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
+        {isSubmitting ? "Grading…" : "Submit feedback"}
       </Button>
     </form>
   )

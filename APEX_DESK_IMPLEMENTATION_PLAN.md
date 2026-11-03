@@ -35,6 +35,8 @@ Establish a reproducible PostgreSQL baseline before feature work continues.
 
 Remove starter features that conflict with the quiet, one-to-many broadcast model.
 
+**Progress:** Community and comment functionality has been removed from the application code and schema. The database migration was applied after confirming the database matched the prior schema and the user confirmed the comment/reaction tables had no records.
+
 ### Work
 
 - Remove the student community routes and their links from desk navigation.
@@ -54,11 +56,13 @@ Remove starter features that conflict with the quiet, one-to-many broadcast mode
 
 Shape server data to match the visibility rules before polishing the UI.
 
+**Progress:** Student Academy and Crucible queries now enforce published and review visibility rules. Review status is consistently named `GRADED`, and the enum rename migration has been applied.
+
 ### Work
 
 - Filter the student Academy query to published lessons only (`published: true`). Apply the same rule to any lesson API or other student-facing lesson query.
 - Restrict student Crucible results to graded/reviewed submissions. Pending submissions should be visible only to their owner and the mentor in HQ.
-- The current schema uses `ReviewStatus.PENDING` and `ReviewStatus.REVIEWED`, while the product wording says `GRADED`. Decide on one canonical status name and update the schema, migration, API, and UI consistently. This plan uses “graded” as the product concept; it does not assume the current enum already contains `GRADED`.
+- Use `ReviewStatus.PENDING` and `ReviewStatus.GRADED` consistently in the schema, migration, API, and UI.
 - Ensure a student can view their own pending submission and its status, while other students cannot see it.
 - Scope mentor review queries to pending submissions and keep mentor-only queries role-checked on the server.
 - Review all student-facing feeds and APIs for unpublished or unauthorized records.
@@ -73,6 +77,8 @@ Shape server data to match the visibility rules before polishing the UI.
 ## Phase 4: Mentor HQ completion
 
 Give the mentor a complete workflow to publish, maintain, and review content.
+
+**Progress:** Mentor-only edit/delete APIs and HQ content managers are implemented for setups, lessons, and announcements. The pending grading queue returns the graded submission and includes mutation feedback. Deletes also remove attached Supabase Storage images.
 
 ### Work
 
@@ -90,23 +96,48 @@ Give the mentor a complete workflow to publish, maintain, and review content.
 - A mentor can grade a pending chart and the submitter can see the feedback.
 - Graded charts become visible under the Phase 3 rules; pending charts remain private.
 
-## Phase 5: Autonomous payment infrastructure
+## Phase 4.5: Subscription entitlement groundwork
 
-Build and verify the payment lifecycle while keeping the final access gates open.
+Define and display subscription access states before payment processing is connected. Keep the hard desk gate off so new students are not locked out before a successful payment can grant access.
+
+**Progress:** `lib/subscription.ts` now centralizes active-access and status checks. Checkout and the membership display read current database state. Desk enforcement remains deferred to Phase 6.
 
 ### Work
 
-- Select one gateway (Hubtel or Paystack) based on Ghana MoMo support, settlement requirements, fees, and available account credentials. Document the choice and expected payment flow.
+- Centralize the strict active rule: premium flag is true and the subscription end timestamp is later than the current time.
+- Classify active, expired, never-subscribed, and inconsistent/inactive subscription records consistently.
+- Make checkout read the database record by the authenticated user's ID; handle signed-out users separately and route mentors to HQ.
+- Show existing active access and its end date, and explain that an additional one-week pass is a deliberate one-time checkout.
+- Leave the desk layout ungated until payment initiation and verified webhook renewals are ready.
+
+### Acceptance criteria
+
+- The shared helper treats an end time equal to or earlier than now as inactive.
+- Both `isPremium` and a future end date are required for active access.
+- Checkout displays distinct active, expired, never-subscribed, and inconsistent states from fresh database data.
+- Mentors are not sent through student checkout.
+- Students remain able to use the desk until Phase 6 intentionally enables enforcement.
+
+## Phase 5: Autonomous payment infrastructure
+
+Build and verify a Ghana Mobile Money payment lifecycle while keeping the final access gates open. The offer is GH₵100 for one seven-day pass. Each pass is a one-time payment; automatic recurring charges are not part of this implementation.
+
+**Progress:** Paystack Mobile Money checkout, server-side transaction verification, signed webhooks, a deduplicated payment ledger, seven-day subscription extension, payment-return status polling, and an HQ ledger view are implemented. Checkout is presented as an Apex Desk membership page. The desk gate remains open. Live processing requires `PAYSTACK_SECRET_KEY`; no sandbox payment has been exercised in this workspace.
+
+### Work
+
+- Use Paystack for Ghana Mobile Money. The student starts checkout from the membership page, Paystack hosts payment, and the return page polls the server for a verified result. The return redirect never grants access.
+- Set the weekly pass to GH₵100 (10,000 pesewas), granting seven days after confirmed payment. Each renewal is a deliberate one-time checkout, not an automatic charge.
 - Implement checkout initiation and a provider webhook at `/api/webhooks/payment` using the provider’s current signature verification and payment verification guidance.
 - Verify amount, currency, reference, and successful provider status server-side. Never grant access from a client-side success redirect alone.
 - Make webhook processing idempotent. Persist a unique provider reference and use a database transaction or equivalent atomic operation so duplicate deliveries cannot create duplicate payment records or extend access multiple times.
 - On a verified successful payment, record an auditable `Payment` entry and extend `subscriptionEndDate` by seven days. If the user already has unexpired access, extend from the existing end date; otherwise extend from the current time.
-- Define behavior for failed, pending, refunded, reversed, and out-of-order events. Ensure retries are safe and failures are observable to the operator.
+- Keep failed and pending transactions from granting access; expose recorded payment attempts to the mentor in the HQ ledger. Refund/reversal reconciliation and operator remediation remain follow-up work before production release.
 - Add a way for the mentor/operator to inspect payment records and resolve exceptions.
 
 ### Acceptance criteria
 
-- A verified payment creates one payment record and grants exactly one seven-day period.
+- A verified GH₵100 payment creates one payment record and grants exactly one seven-day period.
 - Replaying the same webhook does not duplicate the payment or extend access again.
 - An invalid signature, mismatched amount/currency, or unverified payment never grants access.
 - Consecutive valid payments extend access correctly, including when access is still active.
@@ -116,10 +147,13 @@ Build and verify the payment lifecycle while keeping the final access gates open
 
 Close the gates only after the earlier phases are complete and payment behavior is verified.
 
+**Progress:** HQ page access now checks the user's current database role rather than trusting the session role. Desk pages and student-facing chart submission/read-receipt APIs log advisory warnings for inactive subscriptions; the redirect and API 403 triggers remain disconnected for sandbox testing. The actual desk shutdown is not yet enabled.
+
 ### Work
 
 - Keep authentication middleware responsible for routing unauthenticated users away from protected `/desk` and `/hq` routes. Avoid relying on middleware alone for database-backed subscription checks.
-- In the server-side desk layout, load the user’s current subscription state and allow access only when `isPremium` is true and `subscriptionEndDate` is in the future. Redirect expired or unpaid users to checkout.
+- In the server-side desk layout, load the user's current subscription state and allow student access only when `isPremium` is true and `subscriptionEndDate` is in the future. Redirect expired or unpaid students to checkout; route mentors to HQ or exempt them from the student subscription check.
+- Recheck subscription access on sensitive server data paths where App Router client navigation could reuse a previously rendered layout after expiry.
 - Ensure the checkout and payment-return routes remain reachable to signed-in users without active access.
 - Enforce mentor role checks in the HQ layout and every HQ mutation/API handler. Do not trust a client-supplied role.
 - Consider token role staleness: use an authoritative server-side role check for sensitive mentor actions if the session token can outlive a role change.
@@ -139,9 +173,12 @@ Close the gates only after the earlier phases are complete and payment behavior 
 2. Complete Phase 2 and its schema migration.
 3. Complete Phase 3 visibility rules and agree on the review status name.
 4. Complete Phase 4 mentor operations.
-5. Complete Phase 5 in the gateway sandbox while access gates remain open.
-6. Complete Phase 6 only after payment and expiry behavior meet their acceptance criteria.
+5. Complete Phase 4.5 subscription state and checkout messaging while leaving the desk gate open.
+6. Complete Phase 5 in the gateway sandbox while access gates remain open.
+7. Complete Phase 6 only after payment and expiry behavior meet their acceptance criteria.
 
-## Current known decision
+## Resolved decision
 
-The current Prisma schema defines review statuses as `PENDING` and `REVIEWED`; the product plan uses “graded.” Resolve this naming mismatch in Phase 3 before implementing or migrating the grading workflow.
+Chart review status uses `PENDING` and `GRADED`. The PostgreSQL enum rename migration has been generated and applied.
+
+Payment gateway is Paystack Mobile Money. Membership is GH₵100 for a one-time seven-day pass. Do not claim scarcity, guaranteed outcomes, or automatic renewal; checkout urgency must be grounded in the live trade's timing and the real access terms.

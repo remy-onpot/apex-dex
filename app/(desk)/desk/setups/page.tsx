@@ -13,7 +13,6 @@ export default async function SetupsPage() {
     include: {
       tradeMetadata: true,
       readReceipts: { where: { userId: user.id }, select: { id: true } },
-      comments: { include: { author: { select: { name: true } } }, orderBy: { createdAt: "asc" } },
     },
     orderBy: { createdAt: "desc" },
   })

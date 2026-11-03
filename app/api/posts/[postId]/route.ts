@@ -1,103 +1,64 @@
-import { getServerSession } from "next-auth"
-import * as z from "zod"
+import { NextResponse } from "next/server"
+import { ZodError } from "zod"
 
-import { authOptions } from "@/lib/auth"
 import { db } from "@/lib/db"
+import { deleteFeedImages } from "@/lib/feed-storage"
+import { requireMentor } from "@/lib/mentor-auth"
+import { getPostImageUrls } from "@/lib/post-images"
 import { postPatchSchema } from "@/lib/validations/post"
 
-const routeContextSchema = z.object({
-  params: z.object({
-    postId: z.string(),
-  }),
-})
+type RouteContext = { params: { postId: string } }
 
-export async function DELETE(
-  req: Request,
-  context: z.infer<typeof routeContextSchema>
-) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (session?.user?.role !== "MENTOR") {
-      return new Response("Forbidden", { status: 403 })
-    }
+export async function DELETE(_request: Request, { params }: RouteContext) {
+  const auth = await requireMentor()
+  if ("response" in auth) return auth.response
 
-    // Validate the route params.
-    const { params } = routeContextSchema.parse(context)
-
-    // Check if the user has access to this post.
-    if (!(await verifyCurrentUserHasAccessToPost(params.postId))) {
-      return new Response(null, { status: 403 })
-    }
-
-    // Delete the post.
-    await db.post.delete({
-      where: {
-        id: params.postId as string,
-      },
-    })
-
-    return new Response(null, { status: 204 })
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return new Response(JSON.stringify(error.issues), { status: 422 })
-    }
-
-    return new Response(null, { status: 500 })
-  }
-}
-
-export async function PATCH(
-  req: Request,
-  context: z.infer<typeof routeContextSchema>
-) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (session?.user?.role !== "MENTOR") {
-      return new Response("Forbidden", { status: 403 })
-    }
-
-    // Validate route params.
-    const { params } = routeContextSchema.parse(context)
-
-    // Check if the user has access to this post.
-    if (!(await verifyCurrentUserHasAccessToPost(params.postId))) {
-      return new Response(null, { status: 403 })
-    }
-
-    // Get the request body and validate it.
-    const json = await req.json()
-    const body = postPatchSchema.parse(json)
-
-    // Update the post.
-    // TODO: Implement sanitization for content.
-    await db.post.update({
-      where: {
-        id: params.postId,
-      },
-      data: {
-        title: body.title,
-        content: body.content,
-      },
-    })
-
-    return new Response(null, { status: 200 })
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return new Response(JSON.stringify(error.issues), { status: 422 })
-    }
-
-    return new Response(null, { status: 500 })
-  }
-}
-
-async function verifyCurrentUserHasAccessToPost(postId: string) {
-  const session = await getServerSession(authOptions)
-  const count = await db.post.count({
-    where: {
-      id: postId,
-      authorId: session?.user.id,
-    },
+  const post = await db.post.findFirst({
+    where: { id: params.postId, authorId: auth.userId },
+    select: { id: true, imageUrls: true },
   })
+  if (!post) return NextResponse.json({ error: "Post not found" }, { status: 404 })
 
-  return count > 0
+  try {
+    await deleteFeedImages(getPostImageUrls(post.imageUrls), auth.userId)
+    await db.post.delete({ where: { id: post.id } })
+    return NextResponse.json({ id: post.id })
+  } catch {
+    return NextResponse.json(
+      { error: "Unable to delete post and its images" },
+      { status: 502 }
+    )
+  }
+}
+
+export async function PATCH(request: Request, { params }: RouteContext) {
+  const auth = await requireMentor()
+  if ("response" in auth) return auth.response
+
+  let input: unknown
+  try {
+    input = await request.json()
+  } catch {
+    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 })
+  }
+
+  try {
+    const body = postPatchSchema.parse(input)
+    const post = await db.post.findFirst({
+      where: { id: params.postId, authorId: auth.userId },
+      select: { id: true },
+    })
+    if (!post) return NextResponse.json({ error: "Post not found" }, { status: 404 })
+
+    const updated = await db.post.update({
+      where: { id: post.id },
+      data: { title: body.title, content: body.content },
+    })
+    return NextResponse.json(updated)
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return NextResponse.json({ error: error.issues }, { status: 422 })
+    }
+    return NextResponse.json({ error: "Unable to update post" }, { status: 500 })
+  }
 }

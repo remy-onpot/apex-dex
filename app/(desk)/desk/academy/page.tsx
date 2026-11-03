@@ -14,7 +14,7 @@ function lessonText(content: unknown) {
 
 export default async function AcademyPage() {
   const lessons = await db.post.findMany({
-    where: { type: "LESSON" },
+    where: { type: "LESSON", published: true },
     orderBy: { createdAt: "desc" },
   })
 

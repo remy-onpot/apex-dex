@@ -20,10 +20,6 @@ export default async function FeedPage() {
       author: { select: { name: true } },
       tradeMetadata: true,
       readReceipts: { where: { userId: user.id }, select: { id: true } },
-      comments: {
-        include: { author: { select: { name: true } } },
-        orderBy: { createdAt: "asc" },
-      },
     },
     orderBy: { createdAt: "desc" },
   })

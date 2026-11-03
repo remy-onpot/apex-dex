@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import type { z } from "zod"
+import { Loader2 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -68,7 +69,10 @@ export function CreateLessonForm() {
         <p className="text-xs text-muted-foreground">Up to 6 JPG, PNG, or WebP images. 8 MB maximum per image.</p>
         {images.length > 0 && <p className="text-xs text-muted-foreground">{images.map((image) => image.name).join(", ")}</p>}
       </div>
-      <Button type="submit" disabled={isSaving}>{isSaving ? "Publishing…" : "Publish lesson"}</Button>
+      <Button type="submit" disabled={isSaving}>
+        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
+        {isSaving ? "Publishing…" : "Publish lesson"}
+      </Button>
     </form>
   )
 }

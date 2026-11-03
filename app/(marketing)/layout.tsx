@@ -1,4 +1,4 @@
-import Link from "next/link"
+﻿import Link from "next/link"
 
 import { marketingConfig } from "@/config/marketing"
 import { MainNav } from "@/components/main-nav"
@@ -23,7 +23,7 @@ export default async function MarketingLayout({
             >
               Sign in
             </Link>
-            <Link href="/membership" className="inline-flex h-10 items-center rounded-sm bg-lime-400 px-4 text-sm font-bold uppercase tracking-wide text-zinc-950 hover:bg-lime-300">Join Apex Desk</Link>
+            <Link href="/checkout" className="inline-flex h-10 items-center rounded-sm bg-lime-400 px-4 text-sm font-bold uppercase tracking-wide text-zinc-950 hover:bg-lime-300">Join Apex Desk</Link>
           </nav>
         </div>
       </header>

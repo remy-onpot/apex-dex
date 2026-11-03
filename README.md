@@ -17,6 +17,7 @@ Apex Desk is a mentor-led trading education platform. The mentor publishes struc
 - A PostgreSQL database (Supabase is the intended hosted option)
 - OAuth credentials for enabled sign-in providers
 - Supabase Storage credentials to use image uploads
+- A Paystack test secret for Mobile Money checkout and the Paystack webhook URL configured to `/api/webhooks/payment`
 
 ## Local setup
 
@@ -64,6 +65,10 @@ pnpm exec prisma generate
 
 See `.env.example` for the current variable list. Database and OAuth settings are required by the app configuration. Supabase Storage variables are needed for uploads. Keep service-role credentials server-side only.
 
-## Current implementation status
+## Membership payments
 
-This repository is under active development. Payment processing and subscription enforcement are not yet complete; do not treat the current membership UI as a production payment system.
+The weekly pass costs GH₵100 for seven days. Each payment is a one-time purchase; it does not automatically renew. Paystack hosts the Mobile Money checkout. The application verifies the transaction with Paystack before granting access, and the signed webhook endpoint is `/api/webhooks/payment`.
+
+Set `PAYSTACK_SECRET_KEY` to a test key for sandbox work and configure the Paystack webhook to the deployed endpoint. Do not enable live payments until valid, failed, duplicate, and delayed payment events have been exercised and the merchant account's settlement configuration has been confirmed. The desk subscription gate remains open until Phase 6.
+
+The payment ledger records amounts as pesewas (so GH₵100 is stored as 10,000) and is available to mentors in HQ. Refund/reversal reconciliation and operator remediation still need to be completed before production payment launch.

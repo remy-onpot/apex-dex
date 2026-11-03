@@ -10,7 +10,7 @@ import { db } from "@/lib/db"
 export default async function ManageReviewsPage() {
   const submissions = await db.chartSubmission.findMany({
     where: { status: "PENDING" },
-    include: { student: true },
+    include: { student: { select: { id: true, name: true } } },
     orderBy: { createdAt: "asc" },
   })
 

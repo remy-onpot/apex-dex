@@ -1,9 +1,8 @@
-import { getServerSession } from "next-auth/next"
 import { NextResponse } from "next/server"
 import { randomUUID } from "node:crypto"
 
-import { authOptions } from "@/lib/auth"
 import { publicFeedImageUrl, uploadFeedImage } from "@/lib/feed-storage"
+import { requireMentor } from "@/lib/mentor-auth"
 
 export const runtime = "nodejs"
 
@@ -27,13 +26,8 @@ async function hasValidImageSignature(file: File) {
 }
 
 export async function POST(request: Request) {
-  const session = await getServerSession(authOptions)
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-  if (session.user.role !== "MENTOR") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 })
-  }
+  const auth = await requireMentor()
+  if ("response" in auth) return auth.response
 
   let formData: FormData
   try {
@@ -61,7 +55,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "The selected file is not a valid image" }, { status: 415 })
   }
 
-  const path = `feed/${session.user.id}/${randomUUID()}.${extension}`
+  const path = `feed/${auth.userId}/${randomUUID()}.${extension}`
   try {
     await uploadFeedImage(path, file)
     return NextResponse.json({ url: publicFeedImageUrl(path) }, { status: 201 })
