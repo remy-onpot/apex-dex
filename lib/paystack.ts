@@ -1,5 +1,4 @@
 import { db } from "@/lib/db"
-import { hasActiveSubscription } from "@/lib/subscription"
 import { weeklyPass } from "@/config/membership"
 import { env } from "@/env.mjs"
 
@@ -159,30 +158,29 @@ export async function applyVerifiedPaystackTransaction(
       return { payment: current, subscriptionEndDate: user?.subscriptionEndDate ?? null }
     }
 
+    const updatedUsers = await tx.$executeRaw`
+      UPDATE "users"
+      SET
+        "isPremium" = true,
+        "subscriptionEndDate" = GREATEST(COALESCE("subscriptionEndDate", NOW()), NOW()) + INTERVAL '7 days'
+      WHERE "id" = ${payment.userId};
+    `
+    if (updatedUsers !== 1) throw new Error("Payment user not found")
+
     const user = await tx.user.findUnique({
       where: { id: payment.userId },
-      select: { isPremium: true, subscriptionEndDate: true },
+      select: { subscriptionEndDate: true },
     })
     if (!user) throw new Error("Payment user not found")
-
-    const now = new Date()
-    const extensionStart = hasActiveSubscription(user, now)
-      ? user.subscriptionEndDate!
-      : now
-    const subscriptionEndDate = new Date(
-      extensionStart.getTime() + weeklyPass.durationDays * 24 * 60 * 60 * 1000
-    )
-
-    await tx.user.update({
-      where: { id: payment.userId },
-      data: { isPremium: true, subscriptionEndDate },
-    })
 
     const succeededPayment = await tx.payment.findUnique({
       where: { id: payment.id },
     })
     if (!succeededPayment) throw new Error("Payment record not found")
 
-    return { payment: succeededPayment, subscriptionEndDate }
+    return {
+      payment: succeededPayment,
+      subscriptionEndDate: user.subscriptionEndDate,
+    }
   })
 }

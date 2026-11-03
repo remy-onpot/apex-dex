@@ -15,7 +15,7 @@ Apex Desk is a mentor-led trading education platform. The mentor publishes struc
 - Node.js compatible with the project dependencies
 - pnpm
 - A PostgreSQL database (Supabase is the intended hosted option)
-- OAuth credentials for enabled sign-in providers
+- OAuth credentials for enabled sign-in providers in production
 - Supabase Storage credentials to use image uploads
 - A Paystack test secret for Mobile Money checkout and the Paystack webhook URL configured to `/api/webhooks/payment`
 
@@ -31,13 +31,13 @@ Apex Desk is a mentor-led trading education platform. The mentor publishes struc
 
 3. Set `DATABASE_URL` to the application connection string and `DIRECT_URL` to the direct PostgreSQL connection string used by Prisma migrations. For Supabase, use the pooler for the application URL if required by the deployment runtime, and the direct connection for `DIRECT_URL`.
 
-4. The initial PostgreSQL migration creates the complete schema and is intended for an empty database. Apply it only to a new, disposable Supabase project or another empty PostgreSQL database:
+4. The single checked-in PostgreSQL baseline migration creates the complete Apex Desk schema and is intended for an empty database. Apply it only to a new, disposable Supabase project or another empty PostgreSQL database:
 
    ```sh
    pnpm exec prisma migrate deploy
    ```
 
-   The database currently configured in `.env` already contains tables. Do not apply the initial migration to it. Existing databases need their schema and migration history reviewed and baselined separately before deploying migrations. For a new local development database, `pnpm exec prisma migrate dev` can create and apply development migrations.
+   Do not apply this baseline to a database containing data or existing application tables. Existing databases need their schema and migration history reviewed and baselined separately before deploying migrations. For a new local development database, `pnpm exec prisma migrate dev` can create and apply development migrations.
 
 5. Start the development server:
 
@@ -49,7 +49,7 @@ The app is available at `http://localhost:3000`.
 
 ## Database workflow
 
-The Prisma schema is in `prisma/schema.prisma`; committed SQL migrations live under `prisma/migrations`. After changing the schema, create a migration against a development database with:
+The Prisma schema is in `prisma/schema.prisma`; the single initial SQL baseline under `prisma/migrations` represents the complete current schema. After changing the schema, create a migration against a development database with:
 
 ```sh
 pnpm exec prisma migrate dev --name describe_change
@@ -63,7 +63,7 @@ pnpm exec prisma generate
 
 ## Environment variables
 
-See `.env.example` for the current variable list. Database and OAuth settings are required by the app configuration. Supabase Storage variables are needed for uploads. Keep service-role credentials server-side only.
+See `.env.example` for the current variable list. Database settings are required by the app configuration. OAuth credentials are required for production deployment, but can be left blank for local development when using the dev-credentials provider. Supabase Storage variables are needed for uploads. Keep service-role credentials server-side only.
 
 ## Membership payments
 

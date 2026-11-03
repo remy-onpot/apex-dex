@@ -8,10 +8,13 @@ CREATE TYPE "PostType" AS ENUM ('TRADE_SETUP', 'ANNOUNCEMENT', 'GENERAL', 'LESSO
 CREATE TYPE "TradeStatus" AS ENUM ('ACTIVE', 'UPDATED', 'CLOSED', 'INVALIDATED');
 
 -- CreateEnum
-CREATE TYPE "ReviewStatus" AS ENUM ('PENDING', 'REVIEWED');
+CREATE TYPE "ReviewStatus" AS ENUM ('PENDING', 'GRADED');
 
 -- CreateEnum
 CREATE TYPE "NotificationType" AS ENUM ('NEW_TRADE', 'TRADE_UPDATE', 'REVIEW_COMPLETED', 'SYSTEM');
+
+-- CreateEnum
+CREATE TYPE "PaymentStatus" AS ENUM ('PENDING', 'SUCCEEDED', 'FAILED', 'REFUNDED');
 
 -- CreateTable
 CREATE TABLE "accounts" (
@@ -106,30 +109,6 @@ CREATE TABLE "TradeMetadata" (
 );
 
 -- CreateTable
-CREATE TABLE "Comment" (
-    "id" TEXT NOT NULL,
-    "content" TEXT NOT NULL,
-    "authorId" TEXT NOT NULL,
-    "postId" TEXT,
-    "chartSubmissionId" TEXT,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "Comment_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "Reaction" (
-    "id" TEXT NOT NULL,
-    "userId" TEXT NOT NULL,
-    "postId" TEXT,
-    "commentId" TEXT,
-    "emoji" TEXT NOT NULL,
-
-    CONSTRAINT "Reaction_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "ChartSubmission" (
     "id" TEXT NOT NULL,
     "studentId" TEXT NOT NULL,
@@ -147,11 +126,14 @@ CREATE TABLE "ChartSubmission" (
 CREATE TABLE "Payment" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "amount" DOUBLE PRECISION NOT NULL,
+    "amount" INTEGER NOT NULL,
+    "currency" TEXT NOT NULL DEFAULT 'GHS',
     "reference" TEXT NOT NULL,
     "provider" TEXT NOT NULL,
-    "status" TEXT NOT NULL,
+    "status" "PaymentStatus" NOT NULL DEFAULT 'PENDING',
+    "paidAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Payment_pkey" PRIMARY KEY ("id")
 );
@@ -196,6 +178,9 @@ CREATE UNIQUE INDEX "TradeMetadata_postId_key" ON "TradeMetadata"("postId");
 -- CreateIndex
 CREATE UNIQUE INDEX "Payment_reference_key" ON "Payment"("reference");
 
+-- CreateIndex
+CREATE INDEX "Payment_userId_createdAt_idx" ON "Payment"("userId", "createdAt");
+
 -- AddForeignKey
 ALTER TABLE "accounts" ADD CONSTRAINT "accounts_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
@@ -213,24 +198,6 @@ ALTER TABLE "post_read_receipts" ADD CONSTRAINT "post_read_receipts_postId_fkey"
 
 -- AddForeignKey
 ALTER TABLE "TradeMetadata" ADD CONSTRAINT "TradeMetadata_postId_fkey" FOREIGN KEY ("postId") REFERENCES "posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Comment" ADD CONSTRAINT "Comment_authorId_fkey" FOREIGN KEY ("authorId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Comment" ADD CONSTRAINT "Comment_postId_fkey" FOREIGN KEY ("postId") REFERENCES "posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Comment" ADD CONSTRAINT "Comment_chartSubmissionId_fkey" FOREIGN KEY ("chartSubmissionId") REFERENCES "ChartSubmission"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Reaction" ADD CONSTRAINT "Reaction_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Reaction" ADD CONSTRAINT "Reaction_postId_fkey" FOREIGN KEY ("postId") REFERENCES "posts"("id") ON DELETE CASCADE ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "Reaction" ADD CONSTRAINT "Reaction_commentId_fkey" FOREIGN KEY ("commentId") REFERENCES "Comment"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "ChartSubmission" ADD CONSTRAINT "ChartSubmission_studentId_fkey" FOREIGN KEY ("studentId") REFERENCES "users"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
